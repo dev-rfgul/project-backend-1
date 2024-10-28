@@ -1,12 +1,23 @@
-import mongoose from "mongoose";
-import { DB_NAME } from "./constants";
+//we need to load the env file first as it holds the urls keys and passwords.this is one apprroach of doing it and the other is to use the dotenv package but after importing we need to configure it as well
+// require("dotenv").config({path:'./env'});
 
+import dotenv from "dotenv";
+import connectDB from "./db/index.js";
+
+dotenv.config({ path: "./env" });
+
+connectDB();
+
+
+
+
+
+
+/*
+// DB connection 
 import express from "express";
 const app = express();
 
-
-
-// DB connection 
 ; (async () => {
     try {
         await mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`)
@@ -24,3 +35,5 @@ const app = express();
     }
 })()
 //professionally the iife is started with a semicolon to avoid any issues with the previous code
+
+*/
