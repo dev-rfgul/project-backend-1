@@ -1,8 +1,8 @@
 import multer from 'multer'
 
-const storage = multer.diskstorage({
+const storage = multer.diskStorage({
     destination: function (req, res, cb) {
-        sb(null, './public/temp')
+        cb(null, './public/temp')
     },
     filename: function (req, file, cb) {
         // this is used to generate a unique name for the file
