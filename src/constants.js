@@ -1,1 +1,1 @@
-export const DB_NAME='Human Library'
+export const DB_NAME='HumanLibrary'
