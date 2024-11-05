@@ -174,7 +174,6 @@ const logoutUser = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, {}, "User logged out successfully"))
 })
 
-
 const refreshAccessToken = asyncHandler(async (req, res) => {
     try {
         // Accessing the refresh token from cookies or body
@@ -220,9 +219,119 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 });
 
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body
+
+    const user = await User.findById(req.user?._id)
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid old password from line no 229")
+    }
+
+    user.password = newPassword
+    await user.save({ validateBeforeSave: false })
+
+    return res.status(200)
+        .json(200, {}, "Password changed successfully")
+})
+
+const getCurrentUser = acyncHandler(async (req, res) => {
+retrun res
+        .status(200)
+        .json(200, req.user, "Current User Fetched Successfully")
+})
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { fullName, email } = req.body
+
+    if (!fullName || !email) {
+        throw new ApiError(400, "All fields are required , line no 249")
+    }
+
+    const user = User.findByIdAndUpdate(
+        req.user?._id
+        {
+            $set: {
+                //the fullname is very equilent to fullName:fullName but this is the new syntax of es6 Javascript
+                fullName,
+                email: email
+            }
+        },
+        //this will return the new and updated details
+        { new: true }
+    ).select("-password")
+
+    return res
+        .status(200)
+        .json(200, user, "account details updated successfully")
+})
+
+const updateAvatar = asyncHandler(async (req, res) => {
+    const avatarLocalPath = req.file?.path
+
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar file is missing , line no 274")
+    }
+
+    const avatar = uploadOnCloudinary(avatarLocalPath)
+
+    if (!avatar.url) {
+        throw new ApiError(400, "Error while uploading the Avatar")
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                avatar: avatar.url
+            }
+        },
+        { new: true }
+    ).select("-password")
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, user, "cover image updated successfully ")
+        )
+})
+
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+    const coverImageLocalPath = req.file?.path
+    if (!coverImageLocalPath) {
+        throw new ApiError(400, "Cover Image is missing , line no 296")
+    }
+    const coverImage = uploadOnCloudinary(coverImageLocalPath)
+
+    if (!coverImage.url) {
+        throw new ApiError(400, "error while uploading the cover Image")
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                coverImage: coverImage.url
+            }
+        },
+        { new: true }
+    ).select("-password")
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, user, "cover image updated successfully ")
+        )
+})
+
+
+
 export {
     registerUser,
     loginUser,
     logoutUser,
     refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    updateAvatar,
+    updateUserCoverImage,
 }
