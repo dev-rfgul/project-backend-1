@@ -7,23 +7,8 @@ import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
 
 
-// const generateAccessAndRefereshTokens = async (userId) => {
-//     try {
-//         const user = await User.findById(userId)
-//         const accessToken = user.generateAccessToken()
-//         const refreshToken = user.generateRefreshToken()
 
-//         user.refreshToken = refreshToken
-//         await user.save({ validateBeforeSave: false })
-
-//         return { accessToken, refreshToken }
-
-
-//     } catch (error) {
-//         throw new ApiError(500, "Something went wrong while generating referesh and access token")
-//     }
-// }
-const generateAccessAndRefreshTokens = async (userId) => {
+const generateAccessAndRefereshTokens = async (userId) => {
     try {
         const user = await User.findById(userId)
         const accessToken = user.generateAccessToken()
@@ -122,9 +107,13 @@ const loginUser = asyncHandler(async (req, res) => {
     // send the cookie
 
     const { email, username, password } = req.body
-    if (!email || username) {
-        throw new ApiError(400, "Email or username is required")
+    // if (!(email || username)) {
+    //     throw new ApiError(400, "Email or username is required")
+    // }
+    if (!username && !email) {
+        throw new ApiError(400, "username or email is required")
     }
+
     const user = await User.findOne({
         //this is the operator of the mongodb and it will apply the OR condition
         $or: [{ email }, { username }]
