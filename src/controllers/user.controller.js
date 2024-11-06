@@ -232,13 +232,13 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     await user.save({ validateBeforeSave: false })
 
     return res.status(200)
-        .json(200, {}, "Password changed successfully")
+        .json(new ApiResponse(200, {}, "password updated successfully"))
 })
 
 const getCurrentUser = acyncHandler(async (req, res) => {
-retrun res
+    return res
         .status(200)
-        .json(200, req.user, "Current User Fetched Successfully")
+        .json(new ApiResponse(200, req.user, "User details fetched successfully"))
 })
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -249,7 +249,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     }
 
     const user = User.findByIdAndUpdate(
-        req.user?._id
+        req.user?._id,
         {
             $set: {
                 //the fullname is very equilent to fullName:fullName but this is the new syntax of es6 Javascript
@@ -322,7 +322,81 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
         )
 })
 
-
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+    const { username } = req.params
+    if (!username?.trim()) {
+        throw new ApiError(400, "username is missing :: error from user controller :: line no 328")
+    }
+    
+    //aggregation pipelines
+    //aggregation pipelines will always return arrays
+    const channel = await User.aggregate([
+        {
+            $match: {
+                username: username?.toLowerCase()
+            },
+        },
+        {
+            $lookup: {
+                //we named the model "Subscription " but in DB every model name is converted into lowercase and plural
+                from: "subscriptons",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        }
+        {
+            $lookup: {
+                //we named the model "Subscription " but in DB every model name is converted into lowercase and plural
+                from: "subscriptons",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        },
+        {
+            $addFields: {
+                subscribersCount: {
+                    $size: "$subscribers"
+                },
+                channelSubscribedToCount: {
+                    $size: "$subscribedTo"
+                },
+                //the following function counts that the user is subscribed to the channel or not and return the value accrodingly
+                isSubscribed: {
+                    $cond: {
+                        if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                fullName: 1,
+                username: 1,
+                subscribersCount: 1,
+                channelSubscribedToCount: 1,
+                isSubscribed: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1,
+            }
+        }
+    ])
+    console.log(channel);
+    if (!channel?.length) {
+        throw new ApiError(404, "Channel not found ::user controller :: line no 390")
+    }
+    return res
+    .status(200)
+    .json(
+        200,
+        channel[0],
+        "user channel fetched successfully :: user controller :: line 398"
+    )
+})
 
 export {
     registerUser,
@@ -334,4 +408,5 @@ export {
     updateAccountDetails,
     updateAvatar,
     updateUserCoverImage,
+    getUserChannelProfile,
 }
