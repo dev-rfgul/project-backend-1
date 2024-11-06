@@ -327,7 +327,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     if (!username?.trim()) {
         throw new ApiError(400, "username is missing :: error from user controller :: line no 328")
     }
-    
+
     //aggregation pipelines
     //aggregation pipelines will always return arrays
     const channel = await User.aggregate([
@@ -344,7 +344,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 foreignField: "channel",
                 as: "subscribers"
             }
-        }
+        },
         {
             $lookup: {
                 //we named the model "Subscription " but in DB every model name is converted into lowercase and plural
